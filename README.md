@@ -17,3 +17,12 @@ It takes ~2 secs per revolution.
   So basically there will be 180 steps. So the tf-lunas will be set to take 180 readings per second. And the motor will be geard down to 1:8 ration. So it will take 1 second to complete. That will result in 256 steps for the motor. which should be irrelevent for operation of tf-luna . But regardless around 1 reading will be takes around 1.5 step of motor.
   
 </p>
+
+<P>
+  To be done:
+  Make main model
+  upload prototype to github
+  Enable PID control for stepper motor.
+  Create the ros2 subscriber node for the esp32 publisher.
+  Make full version
+</P>
