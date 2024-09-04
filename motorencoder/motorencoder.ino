@@ -1,3 +1,4 @@
+//simple motor rotation with encoder output on serial
 #include <Wire.h>
 #include <AS5600.h>
 #ifdef ARDUINO_SAMD_VARIANT_COMPLIANCE
