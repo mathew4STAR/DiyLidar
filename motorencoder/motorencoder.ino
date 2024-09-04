@@ -1,4 +1,5 @@
-//simple motor rotation with encoder output on serial
+//Encoder outputs in serial
+//Motor turns in one direction, when reaches upperlimit rotates in other direction, and when in reaches lower limit goes back to original direction, keeps repeating
 #include <Wire.h>
 #include <AS5600.h>
 #ifdef ARDUINO_SAMD_VARIANT_COMPLIANCE
@@ -11,23 +12,21 @@
 
 AMS_5600 ams5600;
 
-int ang, lang = 0;
-
 #define STEPPER_PIN_1 9
 #define STEPPER_PIN_2 10
 #define STEPPER_PIN_3 11
 #define STEPPER_PIN_4 12
 
 int step_number = 0;
-float angle = 0;
+float pred_angle = 0;
 float step_angle = 0.17;
-int target_angle  = 90;
+float angle;
 bool go = true;
-int actual_step = 0;
+bool dir = true;
 
-void setup()
-{
 
+
+void setup() {
   SERIAL.begin(115200);
   Wire.begin();
   pinMode(STEPPER_PIN_1, OUTPUT);
@@ -35,36 +34,41 @@ void setup()
   pinMode(STEPPER_PIN_3, OUTPUT);
   pinMode(STEPPER_PIN_4, OUTPUT);
   SERIAL.println(">>>>>>>>>>>>>>>>>>>>>>>>>>> ");
-  if(ams5600.detectMagnet() == 0 ){
-    while(1){
-        if(ams5600.detectMagnet() == 1 ){
-            SERIAL.print("Current Magnitude: ");
-            SERIAL.println(ams5600.getMagnitude());
-            break;
-        }
-        else{
-            SERIAL.println("Can not detect magnet");
-        }
-        delay(1000);
+  if (ams5600.detectMagnet() == 0) {
+    while (1) {
+      if (ams5600.detectMagnet() == 1) {
+        SERIAL.print("Current Magnitude: ");
+        SERIAL.println(ams5600.getMagnitude());
+        break;
+      } else {
+        SERIAL.println("Can not detect magnet");
+      }
+      delay(1000);
     }
   }
 }
 
-void loop()
-{
-    Step(true);
-    SERIAL.println("Actual: " + String(convertRawAngleToDegrees(ams5600.getRawAngle()),DEC));
-    delay(2);
+void loop() {
+  angle = convertRawAngleToDegrees(ams5600.getRawAngle());
+  SERIAL.println("Actual: " + String(angle, DEC));
+  if (angle > 359.0) {
+    dir = false;
+  }
+  if (angle < 1.0) {
+    dir = true;
+  }
+  Step(dir);
+  delay(2);
 }
 
-float convertRawAngleToDegrees(word newAngle)
-{
+
+float convertRawAngleToDegrees(word newAngle) {
   float retVal = newAngle * 0.087890625;
   return retVal;
 }
 
 void Step(bool dir) {
-  if(go) {
+  if (go) {
     if (dir) {
       switch (step_number) {
         case 0:
@@ -121,13 +125,12 @@ void Step(bool dir) {
     }
   }
   step_number++;
-  actual_step++;
-  angle = angle + step_angle;
+  pred_angle = pred_angle + step_angle;
   if (step_number > 3) {
     step_number = 0;
   }
-  if (angle > 360) {
-    angle = 0;
+  if (pred_angle > 360) {
+    pred_angle = 0;
   }
-  //Serial.println("Predicted: " + String(angle));
+  SERIAL.println("Predicted: " + String(pred_angle));
 }
